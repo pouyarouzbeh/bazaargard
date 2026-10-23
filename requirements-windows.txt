@@ -1,0 +1,5 @@
+-r requirements-dev.txt
+# Windows does not ship the IANA timezone database used by zoneinfo.
+tzdata==2026.5
+# Loads the gitignored .env when launching uvicorn with --env-file.
+python-dotenv==1.2.4

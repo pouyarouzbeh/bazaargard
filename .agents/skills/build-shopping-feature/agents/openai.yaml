@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Shopping Feature"
+  short_description: "Build truthful Persian shopping journeys"
+  default_prompt: "Use $build-shopping-feature to complete the relevant Bazargard workflow and report concrete validation evidence."

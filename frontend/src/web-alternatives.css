@@ -1,27 +1,27 @@
 .webalt{display:grid;gap:12px}
-.webalt-banner{border-radius:10px;padding:10px 12px;background:color-mix(in srgb,#d98a1c 12%,transparent);border:1px solid color-mix(in srgb,#d98a1c 35%,transparent);line-height:1.8}
+.webalt-banner{border-radius:10px;padding:10px 12px;background:color-mix(in srgb,var(--amber) 12%,transparent);border:1px solid color-mix(in srgb,var(--amber) 35%,transparent);line-height:1.8}
 .webalt-form{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.webalt-form label{flex:1;min-width:200px;display:grid;gap:4px}
-.webalt-error{color:#b3261e}
+.webalt-error{color:var(--red)}
 .webalt-map{height:300px;border-radius:12px;overflow:hidden;border:1px solid color-mix(in srgb,currentColor 15%,transparent)}
 .webalt-list{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
 .webalt-card{border:1px solid color-mix(in srgb,currentColor 14%,transparent);border-radius:12px;padding:12px;display:grid;gap:4px;animation:hamrah-arrive 1.6s ease-out;min-width:0}
 .webalt-card p{margin:0;overflow-wrap:anywhere}
 .webalt-card-head{display:flex;gap:8px;align-items:flex-start}.webalt-card-head b{flex:1;line-height:1.6}
-.webalt-index{background:#2f7dd1;color:#fff;border-radius:99px;min-width:24px;height:24px;display:grid;place-items:center;font-size:.8rem}
-.webalt-match{font-size:.72rem;border-radius:99px;padding:2px 8px;white-space:nowrap;background:color-mix(in srgb,#2e9b5f 15%,transparent)}.webalt-match.close{background:color-mix(in srgb,#d98a1c 15%,transparent)}
+.webalt-index{background:var(--blue);color: var(--info-foreground);border-radius:99px;min-width:24px;height:24px;display:grid;place-items:center;font-size:.8rem}
+.webalt-match{font-size:.72rem;border-radius:99px;padding:2px 8px;white-space:nowrap;background:color-mix(in srgb,var(--green) 15%,transparent)}.webalt-match.close{background:color-mix(in srgb,var(--amber) 15%,transparent)}
 .webalt-price{font-weight:700}.webalt-why,.webalt-muted{opacity:.7;font-size:.85rem}
 .webalt-store{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.webalt-badge{font-size:.72rem;border-radius:99px;padding:1px 8px;background:color-mix(in srgb,#2e9b5f 18%,transparent)}.webalt-badge.muted{background:color-mix(in srgb,currentColor 10%,transparent)}
-.webalt-links{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:.8rem}.webalt-links a{color:#2f6fb5}
+.webalt-badge{font-size:.72rem;border-radius:99px;padding:1px 8px;background:color-mix(in srgb,var(--green) 18%,transparent)}.webalt-badge.muted{background:color-mix(in srgb,currentColor 10%,transparent)}
+.webalt-links{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:.8rem}.webalt-links a{color:var(--blue)}
 .webalt-phone{text-align:right}
 .webalt-notice{font-size:.8rem;opacity:.7}
-.webalt .web-source b{font-weight:600;color:#2f6fb5}
-.webalt .spec-progress{border:1px solid color-mix(in srgb,#2f7dd1 30%,transparent);background:color-mix(in srgb,#2f7dd1 6%,transparent);border-radius:12px;padding:12px 14px;display:grid;gap:8px}
-.webalt .spec-progress.done{border-color:color-mix(in srgb,#2e9b5f 35%,transparent);background:color-mix(in srgb,#2e9b5f 7%,transparent)}
+.webalt .web-source b{font-weight:600;color:var(--blue)}
+.webalt .spec-progress{border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);background:color-mix(in srgb,var(--blue) 6%,transparent);border-radius:12px;padding:12px 14px;display:grid;gap:8px}
+.webalt .spec-progress.done{border-color:color-mix(in srgb,var(--green) 35%,transparent);background:color-mix(in srgb,var(--green) 7%,transparent)}
 .webalt .spec-progress-head{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .webalt .spec-progress-bar{height:8px;border-radius:99px;background:color-mix(in srgb,currentColor 12%,transparent);overflow:hidden}
-.webalt .spec-progress-bar span{display:block;height:100%;background:#2f7dd1;transition:width .6s ease}
-.webalt .spec-progress.done .spec-progress-bar span{background:#2e9b5f}
+.webalt .spec-progress-bar span{display:block;height:100%;background:var(--blue);transition:width .6s ease}
+.webalt .spec-progress.done .spec-progress-bar span{background:var(--green)}
 .webalt .spec-progress-stats{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.85rem}
-@keyframes hamrah-arrive{0%{background:color-mix(in srgb,#2f7dd1 22%,transparent)}100%{background:transparent}}
+@keyframes hamrah-arrive{0%{background:color-mix(in srgb,var(--blue) 22%,transparent)}100%{background:transparent}}
 @media (prefers-reduced-motion:reduce){.webalt-card{animation:none}.webalt .spec-progress-bar span{transition:none}}

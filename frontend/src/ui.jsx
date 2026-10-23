@@ -1,19 +1,73 @@
-import React,{useEffect,useRef} from 'react';
-import {X} from 'lucide-react';
+import React, { useEffect, useRef, useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
 
-export function Modal({title,onClose,children,wide=false}){
- const dialog=useRef(null),close=useRef(onClose);close.current=onClose;
- useEffect(()=>{
-  const el=dialog.current,backdrop=el.parentElement,opener=document.activeElement;
-  const siblings=[...backdrop.parentElement.children].filter(n=>n!==backdrop&&!n.contains(backdrop));
-  const previous=siblings.map(n=>[n,n.inert,n.getAttribute('aria-hidden')]);
-  previous.forEach(([n])=>{n.inert=true;n.setAttribute('aria-hidden','true')});
-  const focusable=()=>[...el.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex="0"]')].filter(n=>n.getClientRects().length);
-  const first=()=>{(focusable()[0]||el).focus({preventScroll:true})};
-  const key=e=>{if(e.key==='Escape'){e.preventDefault();close.current();return}if(e.key!=='Tab')return;const list=focusable();if(!list.length){e.preventDefault();el.focus();return}const i=list.indexOf(document.activeElement);if(e.shiftKey&&i<=0){e.preventDefault();list.at(-1).focus()}else if(!e.shiftKey&&(i===list.length-1||i<0)){e.preventDefault();list[0].focus()}};
-  const focus=e=>{if(!el.contains(e.target))first()};
-  document.addEventListener('keydown',key,true);document.addEventListener('focusin',focus,true);first();
-  return()=>{document.removeEventListener('keydown',key,true);document.removeEventListener('focusin',focus,true);previous.forEach(([n,inert,hidden])=>{n.inert=inert;if(hidden===null)n.removeAttribute('aria-hidden');else n.setAttribute('aria-hidden',hidden)});if(opener?.isConnected&&!opener.inert)opener.focus({preventScroll:true})};
- },[]);
- return <div className="modal-backdrop" onClick={()=>close.current()}><section ref={dialog} tabIndex={-1} className={'modal '+(wide?'wide':'')} role="dialog" aria-modal="true" aria-label={title} onClick={e=>e.stopPropagation()}><div className="modal-head"><h2>{title}</h2><button className="icon-btn" title="بستن" aria-label="بستن" onClick={()=>close.current()}><X size={20}/></button></div>{children}</section></div>;
+// Peony's sheet focus fix: settle portal/scroll-lock writes before focus geometry.
+export function focusSheet(event) {
+  event.preventDefault();
+  const sheet = event.target;
+  if (!(sheet instanceof HTMLElement)) return;
+  requestAnimationFrame(() => {
+    if (sheet.isConnected && sheet.dataset.state === "open")
+      sheet.focus({ preventScroll: true });
+  });
+}
+
+export function Modal({ title, onClose, children, wide = false }) {
+  const [open, setOpen] = useState(true);
+  const close = useRef(onClose);
+  const opener = useRef(document.activeElement);
+  const finished = useRef(false);
+  close.current = onClose;
+  function finish() {
+    if (finished.current) return;
+    finished.current = true;
+    close.current();
+  }
+  function requestClose() {
+    setOpen(false);
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) finish();
+  }
+  useEffect(() => {
+    if (open) return;
+    // Fallback if animationend is absent, e.g. a background tab.
+    const timer = setTimeout(finish, 260);
+    return () => clearTimeout(timer);
+  }, [open]);
+  return (
+    <Dialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) requestClose();
+      }}
+    >
+      <Dialog.Portal>
+        <Dialog.Overlay className="modal-backdrop" data-slot="sheet-overlay" />
+        <Dialog.Content
+          className={"modal" + (wide ? " wide" : "")}
+          data-slot="sheet-content"
+          aria-describedby={undefined}
+          onOpenAutoFocus={focusSheet}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            if (opener.current?.isConnected)
+              opener.current.focus({ preventScroll: true });
+          }}
+          onAnimationEnd={(event) => {
+            if (event.target === event.currentTarget && !open) finish();
+          }}
+        >
+          <div className="modal-head">
+            <Dialog.Title>{title}</Dialog.Title>
+            <Dialog.Close asChild>
+              <button className="icon-btn" title="بستن" aria-label="بستن">
+                <X size={20} />
+              </button>
+            </Dialog.Close>
+          </div>
+          <div className="modal-body">{children}</div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
 }

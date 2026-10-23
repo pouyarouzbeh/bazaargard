@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sync API Contract"
+  short_description: "Verify FastAPI contracts before integration"
+  default_prompt: "Use $sync-openapi-client to complete the relevant Bazargard workflow and report concrete validation evidence."

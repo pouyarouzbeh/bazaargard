@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Ops Feature"
+  short_description: "Improve the separate operations workspace"
+  default_prompt: "Use $build-ops-feature to complete the relevant Bazargard workflow and report concrete validation evidence."

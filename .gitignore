@@ -22,6 +22,8 @@ backups/
 geo-cache/
 liara-data/
 ops-labs/
+torob-dataset/
+__MACOSX/
 
 # Secrets and private notes (never commit)
 _private/

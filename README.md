@@ -1,247 +1,180 @@
-# Bazargard (بازارگرد) — AI in-person shopping assistant for Tehran
+<div align="center">
 
-[![CI](https://github.com/moazeniz/bazargard/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/moazeniz/bazargard/actions/workflows/ci.yml) [![Deploy](https://github.com/moazeniz/bazargard/actions/workflows/deploy.yml/badge.svg)](https://github.com/moazeniz/bazargard/actions/workflows/deploy.yml) [![Liara](https://img.shields.io/badge/Liara-bazargard--ai-5a2be2)](https://bazargard-ai.liara.run) [![status](https://img.shields.io/badge/status-page-success)](https://negahban-sre.liara.run/status) ![secrets](https://img.shields.io/badge/gitleaks-full%20history-informational) ![sbom](https://img.shields.io/badge/SBOM-SPDX%20%2B%20CycloneDX-informational)
-![release](https://img.shields.io/badge/release-4.5.0-blue) ![python](https://img.shields.io/badge/python-3.12%2B-informational) ![license](https://img.shields.io/badge/license-MIT-green)
+# بازارگرد · Bazaargard
 
-> **خلاصه فارسی —** بازارگرد یک دستیار خرید حضوری فارسی (راست‌به‌چپ) برای تهران است که برای چالش «ترب» در هکاتون Agentic AI استارکوچ ساخته شده. کاربر نیازش را در گفت‌وگو می‌گوید؛ دستیار در کاتالوگ ترب (۲۲۵ هزار محصول، ۳۳۱ هزار پیشنهاد، ۶٬۴۷۶ فروشگاه) جست‌وجو می‌کند، محصولات را با مشخصات واقعی مقایسه می‌کند، فروشنده‌ها را بر اساس قیمت، فاصله، ساعت کاری و خرید اقساطی فیلتر می‌کند، مسیر بازدید و پیش‌نویس پیام به فروشنده می‌سازد و هیچ ادعایی را بدون منبع مطرح نمی‌کند. بک‌اند FastAPI + SQLite، فرانت‌اند React/Vite؛ مدل زبانی Anthropic از طریق دروازهٔ آروان و رله (با BoxAPI به‌عنوان جایگزین خودکار). استقرار اصلی روی لیارا (اپ Docker با دیسک دائمی `/data`) است. راهنمای کامل پروژه: [فارسی](docs/PROJECT_GUIDE.fa.md) · [English](docs/PROJECT_GUIDE.en.md).
+**از «چی بخرم؟» تا «از کجا بخرم؟»**
 
-Bazargard is a Persian, right-to-left shopping assistant that takes a shopper from *"I need a phone for my mother under 20 million toman near Valiasr"* to a verified shortlist of real offers, an opening-hours-aware visit route, seller inquiry drafts and a cost/instalment breakdown — while keeping every claim tied to the catalogue, a seller reply, or a labelled public source.
+دستیار فارسی برای جست‌وجوی کالا، مقایسهٔ گزینه‌ها و برنامه‌ریزی خرید حضوری در تهران.
 
-- **Challenge:** Torob — *in-person shopping assistant* (Starcoach Agentic AI Hackathon, October 2026).
-- **Status:** release **4.5.0**, live on **Liara** as the Docker app `bazargard-ai` (persistent `/data` disk).
-- **Project guide / راهنمای کامل پروژه:** [English](docs/PROJECT_GUIDE.en.md) · [فارسی](docs/PROJECT_GUIDE.fa.md)
-- **LLM:** switchable provider (`LLM_PROVIDER=anthropic|boxapi`). In production, Anthropic (`claude-sonnet-5-5`) is the primary provider, reached through the Arvan LLM gate and the relay. BoxAPI (`openai/gpt-6.1-sol`) takes over automatically on 429, 5xx, credit or timeout errors.
-- **Hardening:** a prompt-injection and abuse guard (`backend/guard.py`) covers 52 attack classes. It passed all 106 red-team checks against a real model ([redteam/REPORT.md](redteam/REPORT.md), [docs/SECURITY.md](docs/SECURITY.md)).
-- **Operations:** JSON logs with request and trace IDs, retries with circuit breakers, and a durable job queue with admin endpoints.
+[![CI](https://github.com/pouyarouzbeh/bazaargard/actions/workflows/ci.yml/badge.svg)](https://github.com/pouyarouzbeh/bazaargard/actions/workflows/ci.yml)
+![React](https://img.shields.io/badge/React-19-149eca)
+![FastAPI](https://img.shields.io/badge/FastAPI-Python_3.12%2B-009688)
+[![MIT](https://img.shields.io/badge/License-MIT-913f3f)](LICENSE)
 
-## Tests & benchmarks · تست‌ها و بنچمارک
+[شروع سریع](#شروع-سریع-در-ویندوز) · [توسعه](#توسعه) · [مستندات](#مستندات) · [English](#english)
 
-> خلاصه: جست‌وجو روی ۶۱ درخواست برچسب‌دار فارسی دقت ۹۵٫۸٪ در ۵ نتیجه‌ی اول دارد و همه‌ی قیدهای سخت را رعایت می‌کند؛ دستیار در ۱۷ درخواست واقعی هیچ قیمت ساختگی نگفت؛ ۱۰۶ از ۱۰۶ آزمون رِدتیم و ۴۰۳ تست خودکار پاس شده‌اند.
+</div>
 
-| What | Result | Source |
-|---|---|---|
-| Catalogue search, 61 labelled Persian requests (no model) | precision@5 **95.8%**, success@5 **96.3%**, hard constraints (budget, area, open now, in-person credit) **100%**; release 4.2.0 baseline: 83.8% / 87% | [docs/BENCHMARK.md](docs/BENCHMARK.md) · [retrieval.json](bench/results/retrieval.json) · [retrieval-baseline.json](bench/results/retrieval-baseline.json) |
-| «Not in Torob» requests (7) | no false match **100%**; the gap is stated **100%** | [docs/BENCHMARK.md](docs/BENCHMARK.md) |
-| End to end with the agent (17 requests) | **17/17** answered; cards in the right category and within the constraints **100%**; citations valid **100%**; hallucinated prices **0%** (44 price mentions); p50 / p95 11.1 s / 27.2 s | [e2e.json](bench/results/e2e.json) |
-| Red team (104 attacks + 2 false-positive checks) | **106/106** with the guard; 50/86 on the same model-facing checks without it | [redteam/REPORT.md](redteam/REPORT.md) · [results-hardened.json](redteam/results-hardened.json) |
-| Automated tests | **403 passed** against the real catalogue; CI runs the 312 that need no dataset | [green CI run](https://github.com/moazeniz/bazargard/actions/runs/39962243407) |
-| Dataset | 225,903 products · 331,506 offers · 6,476 shops | [dataset.json](bench/results/dataset.json) |
+## دربارهٔ این نسخه
 
-Reproduce: `make test` (CI suite) · `make test-full TEST_CATALOG=$PWD/data/catalog.db` (all 403) · `make bench` (search benchmark, no model calls).
+این مخزن نسخهٔ توسعه‌یافتهٔ [moazeniz/bazargard](https://github.com/moazeniz/bazargard) است. تجربهٔ خرید بازطراحی شده و رابط راست‌به‌چپ، پالت جیگری و سنگی، تم روشن و تیره، دراور و toast مشترک و متن‌های کوتاه دارد. ساختار راهنماها و اسکیل‌های توسعه نیز با معماری بازارگرد تطبیق یافته است.
 
----
+## قابلیت‌ها
 
-## Contents
+- **جست‌وجو:** نام یا مدل کالا، بودجه، برند، محدوده و شرایط اقساط حضوری.
+- **انتخاب محصول و فروشگاه:** کارت محصول، پیشنهادهای فروشندگان، قیمت و تاریخ ثبت.
+- **مقایسه:** مشخصات چند محصول، نمودار، منابع و خروجی HTML/CSV.
+- **نقشه و برنامهٔ خرید:** انتخاب فروشگاه، حداکثر چهار توقف، سبد چندقلمی و مسیریابی.
+- **پیگیری:** پیش‌نویس پرسش، لینک پاسخ فروشنده و چک‌لیست شخصی.
+- **گفت‌وگوی هوشمند:** اتصال اختیاری به مدل؛ جست‌وجوی مستقیم بدون کلید مدل هم کار می‌کند.
+- **توسعهٔ ساختاریافته:** قراردادهای `AGENTS.md`، پنج skill محلی، بررسی کنتراست و بودجهٔ خروجی.
 
-[Project guide](#project-guide--راهنمای-کامل-پروژه) · [Features](#features) · [Architecture](#architecture) · [Quick start](#quick-start-local-development) · [Configuration](#configuration) · [Tests](#tests) · [Deployment](#deployment) · [Project structure](#project-structure) · [Security](#security-notes) · [Docs](#documentation) · [Team](#team)
+فضای Ops جداگانه برای بررسی سایت نمونه و عملیات تأییدشونده نیز در کد موجود است؛ برای راه‌اندازی بخش خرید به آن نیازی نیست.
 
-## Project guide / راهنمای کامل پروژه
+## پیش‌نیازها
 
-A complete walkthrough of the product for users, judges and maintainers: [docs/PROJECT_GUIDE.en.md](docs/PROJECT_GUIDE.en.md) (English) · [docs/PROJECT_GUIDE.fa.md](docs/PROJECT_GUIDE.fa.md) (فارسی).
+| مورد | نیاز |
+| --- | --- |
+| Python | نسخهٔ 3.12 یا بالاتر |
+| Node.js | نسخهٔ 20.19 یا بالاتر |
+| داده | سه فایل `products.csv`، `shops.csv` و `offers.csv` یا یک `catalog.db` سازگار |
+| کلید مدل | فقط برای گفت‌وگوی هوشمند و امکانات وابسته به مدل |
 
-## Features
+دیتاست همراه مخزن توزیع نمی‌شود. دیتاست محلی بررسی‌شده شامل ۲۲۵٬۹۰۳ محصول، ۳۳۱٬۵۰۶ پیشنهاد و ۶٬۴۷۶ فروشگاه بوده است؛ تعداد رکوردها به دادهٔ ورودی شما بستگی دارد.
 
-**Shopping conversation (Persian chat, Quick / Advanced modes)**
-- Needs discovery with source-backed memory: every saved preference quotes the user's own words; corrections replace earlier values; trip-only vs. permanent memory; named recipient profiles.
-- Hard filters that the model cannot loosen: budget, neighbourhood/radius, brand, in-person instalment credit (channel, provider, category and price eligibility), opening hours at the planned visit time.
-- *Quick* mode: one direct search, short answer. *Advanced* mode: multi-hop investigation (`plan_research` → parallel query rounds → seller joins → offer inspection → verification), bounded to 12 model rounds / 40 tool calls, with a reviewable query trail.
-- Recoverable chat runs: answers are persisted as events and polled, so reloads and dropped connections do not lose them.
+## شروع سریع در ویندوز
 
-**Catalogue and comparison**
-- Full Torob dataset in SQLite with Persian-normalised FTS5 retrieval and category-intent guards (phones vs. phone batteries, laptops vs. adapters).
-- 2–12 product comparison tables with normalised specs, explicit missing/conflicting values, zero-baseline charts, offline HTML/CSV export, immutable reply snapshots.
-- Optional source-attributed spec completion and buying reviews from bounded public web research (manufacturer, spec sites, specialist reviews), never overwriting catalogue facts.
+در PowerShell:
 
-**Trip planning**
-- Offer cards with seller-wording inspection (used/refurbished/non-original), opening schedules in Asia/Tehran (split and overnight shifts), nearest-neighbour route of up to four stops, Google Maps links, OpenStreetMap maps with catalogue coordinates.
-- Joint basket (up to 6 items / 4 stops), cost and instalment calculator, deadline planning, offline HTML trip pass.
-- Seller inquiry drafts, expiring one-use seller reply/hold links, labelled seller-failure simulations with automatic alternatives. **No real calls or messages are ever sent.**
-- When the catalogue has nothing: sourced shopping-area suggestions on a map, Tehran merchant discovery and web alternatives — always labelled as unverified leads, never as qualifying offers.
-
-**Ops workspace (`?workspace=ops`)** — a companion for the Liara challenge: isolated sample deployments, HTTP/log/CPU/RSS diagnosis, owner-approved fixes with post-checks and rollback, and a read-only-by-default Liara API client.
-
-See [docs/FEATURES.md](docs/FEATURES.md) for the detailed behaviour and its limits.
-
-## Architecture
-
-```mermaid
-flowchart LR
-  U["Shopper's browser<br/>React 19 SPA, Persian RTL"]
-  subgraph Liara["Liara · Docker app bazargard-ai"]
-    API["FastAPI + built SPA<br/>uvicorn, 1 worker"]
-    AG["Agent tool loop<br/>Quick / Advanced"]
-    subgraph Disk["persistent disk /data"]
-      CAT[("catalog.db<br/>SQLite + FTS5")]
-      MEM[("memory.db<br/>users, trips, runs")]
-      CACHE[("public-research.db<br/>cache")]
-    end
-  end
-  GATE["Arvan LLM gate<br/>token, 3-day window, kill switch"]
-  RELAY["Relay (Finland)<br/>holds the Anthropic key"]
-  ANT["Anthropic<br/>claude-sonnet-5-5 / haiku-5-5"]
-  LLM["BoxAPI (fallback)<br/>OpenAI-compatible<br/>openai/gpt-6.1-sol"]
-  SEED["Catalogue seed<br/>catalog.db.gz (token)"]
-  WEB["Public web<br/>(bounded, HTTPS-only)"]
-  U -- "HTTPS /api/*" --> API
-  API --> AG
-  API --> CAT & MEM & CACHE
-  AG -- "primary: /v1/messages (RELAY_URL)" --> GATE --> RELAY --> ANT
-  AG -. "fallback on 429/5xx/credit/timeout" .-> LLM
-  API -. "first boot only" .-> SEED
-  API -. "spec / review research" .-> WEB
+```powershell
+git clone https://github.com/pouyarouzbeh/bazaargard.git
+cd bazaargard
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-windows.txt
+npm.cmd --prefix frontend ci --no-audit --no-fund
+npm.cmd --prefix frontend run build
+Copy-Item .env.example .env
 ```
 
-- One container serves the API and the built SPA (`frontend/dist`); Liara terminates TLS.
-- State is three SQLite files on the `/data` disk. The design is intentionally **single-replica** (in-process jobs, SQLite); scale vertically.
-- The model only gets typed tools over the catalogue and the user's own session. There is no SQL, shell, arbitrary URL fetch or outbound messaging tool.
-- `backend/llm.py` presents one Anthropic-shaped interface. It talks to Anthropic through the gate and relay (`RELAY_URL`/`RELAY_TOKEN`), or translates to the BoxAPI Responses API with key rotation. A circuit breaker per provider and an automatic fallback mean one outage does not stop a chat. A turn that still fails goes to the durable queue (`chat_retry`).
-- Untrusted input passes `backend/guard.py` before it reaches the model. `backend/obs.py` writes JSON logs, `backend/resilience.py` applies the retry policy and circuit breakers, and `backend/jobqueue.py` runs the durable queue.
+CSVها را استخراج کنید و مسیر پوشه‌ای را بدهید که هر سه فایل مستقیماً در آن قرار دارند:
 
-Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\run-local.ps1 -DatasetDir "C:\datasets\torob"
+```
 
-## Quick start (local development)
+اگر کاتالوگ آماده دارید، آن را در `data\catalog.db` قرار دهید و دستور زیر را اجرا کنید. برای دفعات بعد نیز همین دستور کافی است:
 
-Requirements: Python 3.12+, Node 20.19+ (22 recommended), the Torob challenge dataset CSVs (see [docs/DATA.md](docs/DATA.md)).
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\run-local.ps1
+```
+
+برنامه در **<http://127.0.0.1:8506>** باز می‌شود. برای توقف `Ctrl+C` بزنید. کاتالوگ موجود بازنویسی نمی‌شود. راهنمای کامل: [اجرای ویندوز](docs/LOCAL_WINDOWS.fa.md).
+
+## اجرا در Linux / macOS
+
+با Python، Node و Make نصب‌شده:
 
 ```bash
-git clone <repo-url> torob-bazargard && cd torob-bazargard
-make install                    # .venv + backend and test dependencies
-make install-frontend           # npm ci
-make catalog DATASET_DIR=/path/to/torob-csvs   # -> data/catalog.db (one-off, a few minutes)
-make frontend-build             # -> frontend/dist
-cp .env.example .env            # optional: fill BOXAPI_* to enable chat
+git clone https://github.com/pouyarouzbeh/bazaargard.git
+cd bazaargard
+make install
+make install-frontend
+make catalog DATASET_DIR=/path/to/torob-csvs
+make frontend-build
+cp .env.example .env
 set -a; . ./.env; set +a
-make run                        # http://127.0.0.1:8506
+make run
 ```
 
-Frontend hot-reload: keep `make run` going and start `make dev-frontend` (Vite proxies `/api` to port 8506).
+برای استفاده از `catalog.db` آماده، آن را در `data/` قرار دهید و مرحلهٔ `make catalog` را رد کنید.
 
-Without an LLM configured, catalogue search, filters, comparisons, maps, drafts, simulations and visit planning still work; the chat explains that the model is not configured.
+## تنظیمات
 
-Docker:
+الگوی تنظیمات در [.env.example](.env.example) است. مقادیر واقعی را فقط در `.env` یا محیط اجرا تنظیم کنید.
+
+| متغیر | کاربرد |
+| --- | --- |
+| `PUBLIC_BASE_URL` | نشانی برنامه؛ پیش‌فرض نمونه برای لوکال است |
+| `DATA_DIR` | مسیر کاتالوگ و دادهٔ اجرایی؛ پیش‌فرض لوکال `data/` است |
+| `LLM_PROVIDER` | `boxapi` یا `anthropic` |
+| `BOXAPI_BASE_URL` / `BOXAPI_KEYS` | نشانی سرویس و کلیدهای مسیر BoxAPI |
+| `RELAY_URL` / `RELAY_TOKEN` | تنظیمات relay برای مسیر Anthropic |
+| `LLM_MODEL` / `LLM_LIGHT_MODEL` | انتخاب مدل در مسیر BoxAPI؛ اختیاری |
+
+تنظیمات پیش‌فرض نمونه هیچ کلید یا مقصد انتشار فعالی ندارند. پس از تغییر `.env`، بک‌اند را دوباره اجرا کنید.
+
+## توسعه
+
+بک‌اند خروجی `frontend/dist` را سرو می‌کند. پس از تغییر UI بیلد تازه بگیرید؛ برای به‌روزرسانی خودکار، بک‌اند را روی پورت 8506 نگه دارید و Vite را در ترمینال دیگری اجرا کنید:
 
 ```bash
-make docker-build
-make docker-run                 # http://127.0.0.1:8080, ./data mounted at /data
+npm --prefix frontend run dev -- --host 127.0.0.1
 ```
 
-## Configuration
-
-All configuration is via environment variables (systemd `EnvironmentFile`, Liara env vars, or `docker --env-file`). Template: [.env.example](.env.example).
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `PUBLIC_BASE_URL` | **yes** in prod | — | Public origin, e.g. `https://bazargard-ai.liara.run/`. Used for seller reply/hold links and shares. |
-| `DATA_DIR` | no | `<repo>/data` (`/data` in the image) | Holds `catalog.db`, `memory.db` (also the job queue), `public-research.db`, `canonical-products.db` and ops lab files. Must be persistent. |
-| `LLM_PROVIDER` | no | `anthropic` | Primary model provider: `anthropic` (through the gate and relay) or `boxapi`. |
-| `LLM_FALLBACK_PROVIDER` | no | the other provider | Takes over on 429, 5xx, credit or timeout errors. Set it empty to disable fallback. |
-| `RELAY_URL` | for `anthropic` | — | Base URL of the Anthropic path: the Arvan LLM gate (`http(s)://<gate>/meow-llm`), which forwards to the relay. Also used for `/routing` and `/place-context` fallbacks. |
-| `RELAY_TOKEN` | with `RELAY_URL` | — | Bearer token for the gate. It is a gate token; the Anthropic key never leaves the relay host. |
-| `ANTHROPIC_MODEL`, `ANTHROPIC_LIGHT_MODEL` | no | `claude-sonnet-5-5`, `claude-haiku-5-5` | Main and light (guard judge) models on the Anthropic path. |
-| `BOXAPI_BASE_URL` | for `boxapi` / fallback | `https://ai.boxapi.ir/ai/v1` | BoxAPI OpenAI-compatible base URL (Responses API). |
-| `BOXAPI_KEYS` | for `boxapi` / fallback | — | Comma-separated keys, used round-robin with per-key cooldown and fail-over on 401/402/403/429/5xx/timeouts. |
-| `LLM_MODEL`, `LLM_LIGHT_MODEL` | no | `openai/gpt-6.1-sol`, `openai/gpt-6-luna` | Main and light models on BoxAPI. |
-| `LLM_FALLBACK_MODELS` | no | `openai/gpt-6-sol,openai/gpt-6-luna` | BoxAPI model fallback chain. |
-| `LLM_REASONING_EFFORT`, `LLM_SEARCH_CONCURRENCY`, `LLM_TOOL_RESULT_CHARS` | no | model default, `3`, `30000` | Tuning knobs: reasoning effort, parallel web searches, and the cap on tool-result characters sent to the model. |
-| `LLM_PROMPT_CACHE` | no | `1` | Anthropic prompt caching of the system prompt and tool schemas in agent turns. Set `0` to disable. |
-| `SPEC_MODEL`, `SPEC_MODEL_SEARCH` | no | `LLM_MODEL`, `1` | Model override for specification harmonisation. `0` disables model-assisted web search for specs and reviews. |
-| `ADMIN_TOKEN` | no | unset (admin API disabled) | Enables `/api/admin/queue` and `/api/admin/jobs[...]` (list, inspect, replay, discard) with `Authorization: Bearer`. |
-| `LOG_LEVEL`, `LOG_FORMAT`, `APP_ENV` | no | `info`, `json`, `production` | Structured JSON logging (`backend/obs.py`). |
-| `CATALOG_URL` | first boot | — | URL of `catalog.db.gz`, downloaded once by `backend/start.py` when `DATA_DIR/catalog.db` is missing. |
-| `CATALOG_TOKEN` | with `CATALOG_URL` | — | Bearer token for the seed download. |
-| `CATALOG_SHA256` | recommended | — | Expected SHA-256 of the gzip. A mismatch aborts the boot. |
-| `PORT`, `FORWARDED_ALLOW_IPS` | no | `8080`, `127.0.0.1` | Listen port of `backend/start.py` (the container entrypoint), and the proxies trusted for `X-Forwarded-*`. |
-| `OSRM_URL`, `OVERPASS_URL`, `HTTP_USER_AGENT` | no | public OSRM / Overpass endpoints, Bazargard UA | Road-distance and OSM context providers; user agent for public fetches. |
-| `WEB_GATEWAY_URL`, `WEB_GATEWAY_TOKEN` | optional | empty | Optional fetch gateway for public pages. Leave it empty to fetch directly (the default). |
-| `DEV_CONSOLE`, `DEV_TRACE_HOURS` | no | unset, `24` | `DEV_CONSOLE=1` enables the in-app developer console (`/api/dev/*`, per-run model, tool and guard trace). Unset, every dev route answers 404. Traces are kept for `DEV_TRACE_HOURS` hours. Leave it unset in production handover. |
-| `LIARA_API_TOKEN`, `LIARA_ALLOW_MUTATIONS` | no | —, unset | Liara API client of the ops workspace (`backend/ops.py`). A mutating call needs both `true` and an approved action. |
-| `TEST_CATALOG` | tests | — | Absolute path to a real `catalog.db`. Enables the integration tests. |
-
-Observability: every log line is one JSON object with `ts, level, app, env, release, event, request_id, trace_id, span_id, session, msg`. `X-Request-ID` and `traceparent` are accepted and returned. Health: `/healthz` (liveness) and `/api/ready` (alias `/readyz`), which reports catalogue, database, disk, providers, queue backlog and open circuits.
-
-## Tests
+بررسی‌های فرانت‌اند:
 
 ```bash
-make test                                         # unit tests; catalogue tests skip
-make test-full TEST_CATALOG=$PWD/data/catalog.db  # full suite against the real catalogue
-make lint                                         # byte-compile + shell syntax
+npm --prefix frontend run check
 ```
 
-403 tests in `tests/` (all pass against the real catalogue): 312 run without the dataset (CI) and 91 more need `TEST_CATALOG`. Coverage includes memory/corrections and session isolation, credit eligibility, Persian normalisation, schedules, hard-filter preservation in multi-hop retrieval, immutable snapshots, seller simulations, SSRF guards in public research, the guard against an attack corpus plus false positives on 77 real shopper messages, LLM provider switching and fallback (fake transport), observability and the job queue, approval/rollback flows of the ops workspace, and Liara API contracts (mocked transport).
+این دستور مستندات agent/skill، ۷۲ جفت کنتراست رنگ، تست‌های رفتار، بیلد و سقف حجم فشردهٔ JS/CSS را بررسی می‌کند.
 
-CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs lint + unit tests on Python 3.12, `npm ci && npm run build`, and a Docker image build.
+تست‌های بک‌اند در PowerShell:
 
-## Deployment
-
-| Target | How | Runbook |
-|---|---|---|
-| **Liara** (production, `bazargard-ai`) | Docker platform via `liara.json`, disk `data` → `/data`, catalogue seeded on first boot; `liara deploy` CLI or `scripts/liara_release.py` (REST API) | [DEPLOYMENT.md → Liara](docs/DEPLOYMENT.md#1-liara-production) |
-| Local Docker | `make docker-build docker-run` | [DEPLOYMENT.md → Docker](docs/DEPLOYMENT.md#2-docker-local-or-any-host) |
-| Self-hosted VM (optional, legacy) | systemd + nginx templates in `deploy/self-hosted/` | [DEPLOYMENT.md → self-hosted](docs/DEPLOYMENT.md#5-optional-self-hosted-vm-legacy) |
-
-Typical release: `make liara-deploy` → `make liara-status` → on trouble `make liara-rollback`.
-
-Health endpoints: `GET /api/health` (liveness, release, provider) and `GET /api/ready` (503 until the catalogue is loaded). Day-2 operations: [docs/OPERATIONS.md](docs/OPERATIONS.md).
-
-## Project structure
-
-```
-torob-bazargard/
-├── backend/                 FastAPI app (server.py), agent loop, catalogue, memory, research, ops workspace
-│   ├── server.py            HTTP API + static SPA
-│   ├── start.py             container entrypoint (catalogue seed + uvicorn)
-│   ├── catalog.py           SQLite/FTS5 catalogue; `python backend/catalog.py <csv-dir> <db>` importer
-│   └── build_product_index.py  optional derived spec index
-├── frontend/                React 19 + Vite SPA (src/, public/, index.html)
-├── tests/                   pytest suite (+ fixtures/)
-├── scripts/
-│   ├── liara_release.py     Liara REST API: deploy, releases, rollback, status, logs, restart
-│   ├── liara-package.sh     source tarball honouring .liaraignore
-│   ├── publish-catalog-seed.sh  token-protected catalog.db.gz for first boot
-│   └── backup-data.sh       online SQLite backups
-├── deploy/
-│   ├── catalog-seed/        nginx location for the seed download
-│   └── self-hosted/         optional VM path: install.sh, systemd unit, nginx, deploy-vm.sh
-├── docs/                    project guide (fa/en), architecture, deployment, operations, features, data, security, legacy/
-├── Dockerfile · liara.json · .dockerignore · .liaraignore
-├── Makefile · requirements.txt · requirements-dev.txt · pytest.ini
-└── .env.example · CHANGELOG.md · LICENSE
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m pytest -q tests
+# برای تست‌های وابسته به دیتاست:
+$env:TEST_CATALOG = (Resolve-Path .\data\catalog.db).Path
+.\.venv\Scripts\python.exe -X utf8 -m pytest -q tests
 ```
 
-## Security notes
+در Linux/macOS از `make test` یا `make test-full TEST_CATALOG=/absolute/path/catalog.db` استفاده کنید.
 
-- **No secrets in the repository.** Runtime secrets (gate token, BoxAPI keys, catalogue token, admin token, Liara token) live only in Liara's environment variables, or in a local, gitignored `.env`. The Anthropic API key exists only on the relay host. `.env*`, databases and `data/` are git- and docker-ignored.
-- The catalogue (Torob challenge dataset) and `memory.db` (user conversations) are never committed or baked into images.
-- Browser identities are random HttpOnly, SameSite=Lax cookies; session ownership is checked server-side; mutating requests enforce same-origin; request bodies are size-limited; expensive endpoints (search, research, specs, reviews, vision) have per-IP hourly limits, and chat is bounded by per-chat tool budgets and one active run per chat. New users and new chats are deliberately not rate-limited, so shared networks are never blocked. API responses are `no-store`.
-- A prompt-injection and abuse guard (`backend/guard.py`) normalises Unicode, scans many encodings, keeps an abuse score per conversation that warns and then closes it, fences untrusted data, and filters outputs. Red-team results: [redteam/REPORT.md](redteam/REPORT.md).
-- Tool results, seller text, web pages and logs are treated as untrusted data, never instructions. Outbound fetches are HTTPS-only, public-address-only with DNS pinning, size/time bounds and no credentials.
-- Dataset phone numbers and most shop names are synthetic; the app never contacts sellers.
-- This is a competition deployment, not a hardened multi-tenant service. Full threat model: [docs/SECURITY.md](docs/SECURITY.md).
+در بررسی لوکال ویندوز، ۴۰۰ تست از ۴۰۳ تست بک‌اند موفق بوده‌اند؛ سه شکست مربوط به PDF و آزمایشگاه جانبی Ops هستند. جزئیات در [راهنمای ویندوز](docs/LOCAL_WINDOWS.fa.md) ثبت شده است. تست مدل واقعی به کلید و سرویس در دسترس نیاز دارد.
 
-## Documentation
+## ساختار پروژه
 
-| Doc | Content |
-|---|---|
-| [docs/PROJECT_GUIDE.en.md](docs/PROJECT_GUIDE.en.md) · [docs/PROJECT_GUIDE.fa.md](docs/PROJECT_GUIDE.fa.md) | Project guide / راهنمای کامل پروژه |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Components, request flow, data model, design decisions |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Runbooks: Liara (primary), Docker, optional self-hosted VM; upgrades, rollback, backups |
-| [docs/OPERATIONS.md](docs/OPERATIONS.md) | Monitoring, alerts, logs, on-call checklist, incident playbooks |
-| [docs/FEATURES.md](docs/FEATURES.md) | Functional behaviour and honest limits |
-| [docs/AGENT_REASONING.md](docs/AGENT_REASONING.md) | Quick/Advanced agent loop, budgets, multi-hop investigation |
-| [docs/DATA.md](docs/DATA.md) | Obtaining the dataset, building the catalogue, data-integrity disclosures |
-| [docs/SECURITY.md](docs/SECURITY.md) | Security model and prompt-injection hardening |
-| [redteam/REPORT.md](redteam/REPORT.md) | Red-team method and results (baseline vs hardened) |
-| [docs/legacy/RELAY_AND_GATEWAY.md](docs/legacy/RELAY_AND_GATEWAY.md) | 3.x egress relay and web gateway (historical) |
-| [CHANGELOG.md](CHANGELOG.md) | Release history |
+```text
+bazaargard/
+├── backend/             FastAPI، کاتالوگ، حافظه، agent و تحقیق
+├── frontend/            React 19، Vite، اجزای UI و تم
+├── .agents/skills/      پنج workflow مخصوص توسعه و بررسی
+├── agents/shared/      معماری، طراحی، دسترس‌پذیری و داده
+├── tests/              تست‌های Python
+├── scripts/            بررسی خروجی، کنتراست و ابزارهای اجرا
+├── docs/               راهنماها، گزارش تغییرات و مجوزها
+├── infra/              ابزارهای زیرساخت و Liara
+├── run-local.ps1        اجرای ویندوز و ورود دیتاست
+└── .env.example         الگوی تنظیمات بدون کلید
+```
 
-## Team
+معماری اجرا: `React → FastAPI → SQLite/FTS5`؛ سرویس مدل و منابع عمومی وب اختیاری‌اند. کاتالوگ، حافظه و وضعیت اجرا جدا از سورس نگه‌داری می‌شوند.
 
-Built by team **«MeowMeow»** for the **Starcoach Agentic AI Hackathon** (October 2026), Torob challenge.
+## داده و انتشار
 
-Licensed under the [MIT License](LICENSE). The Torob dataset is not part of this repository and is subject to the challenge organisers' terms.
+- `.env`، دیتاست، پایگاه‌های داده، گفت‌وگوها، کش و `node_modules` وارد Git نمی‌شوند.
+- قیمت‌ها دادهٔ ثبت‌شده‌اند. وضعیت موجودی، هویت و منابع در محل مربوط نمایش داده می‌شوند؛ بعضی نام‌ها و شماره‌های دیتاست نمونه‌اند.
+- ارسال پیام به فروشنده خودکار نیست. سناریوهای شبیه‌سازی از پاسخ واقعی جدا هستند.
+- Docker و ابزارهای Liara در مخزن موجودند؛ [راهنمای انتشار](docs/DEPLOYMENT.md) تنظیمات آن‌ها را توضیح می‌دهد. آدرس‌ها و شناسه‌های زیرساخت منبع، مقصد آمادهٔ این مخزن نیستند.
+- پوش به `main` برنامه را روی سرور منتشر نمی‌کند. workflow انتشار منبع به مخزن اصلی محدود است.
 
-<!-- platform:begin -->
-## Delivery and operations
+## مستندات
 
-This repo ships with the team platform kit: CI (tests, image smoke, gitleaks, audits, SBOM, Trivy), a tag-driven Liara deploy with automatic rollback, and IaC in `infra/liara.app.yaml`. Details: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#release-pipeline-infrastructure-as-code-and-health-checks) · [docs/OPERATIONS.md](docs/OPERATIONS.md#platform-operations-slos-backups-runbooks) · team platform overview in `negahban/docs/PLATFORM.md`.
-<!-- platform:end -->
+- [راهنمای اجرای ویندوز](docs/LOCAL_WINDOWS.fa.md)
+- [معماری](docs/ARCHITECTURE.md) و [قابلیت‌ها](docs/FEATURES.md)
+- [داده](docs/DATA.md) و [امنیت](docs/SECURITY.md)
+- [انتقال ساختار و بازسازی UX](docs/UX_REBUILD.md)
+- [گزارش تغییرات این نسخه](docs/changelogs/README.md)
+- [قرارداد توسعه](AGENTS.md)
+
+## English
+
+Bazaargard is a Persian, RTL assistant for in-person shopping in Tehran. It combines catalogue search, product comparison, store offers, maps and visit planning. This repository develops the upstream Bazargard project with a rebuilt shopping experience, light/dark semantic themes, shared overlays/toasts and local engineering skills.
+
+Requires Python 3.12+, Node.js 20.19+ and a compatible Torob catalogue. The dataset and API credentials are not distributed. Direct search works without an LLM key; model-backed features need configured credentials. See the setup sections above and linked documentation for platform-specific details.
+
+## مجوز و منبع
+
+بر پایهٔ پروژهٔ [Bazargard از MeowMeow Team](https://github.com/moazeniz/bazargard)، با حفظ تاریخچه و [مجوز MIT](LICENSE). تغییرات این مخزن شامل تجربهٔ خرید، طراحی رابط و ساختار توسعهٔ محلی است.
+
+صف ButterPop از Peony اقتباس شده و [مجوز و انتساب آن](docs/licenses/BUTTERPOP_LICENSE.md) حفظ شده است. دیتاست ترب مجوز و شرایط توزیع مستقل دارد و جزو این مخزن نیست.

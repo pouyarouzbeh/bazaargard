@@ -52,9 +52,9 @@ export default function MapPage({offers,profile,neighborhoods=[],planIds,onLocat
    markers.current.set(s.shop_id,marker);
   });
   if(profile.lat!=null&&profile.lon!=null){
-   L.circleMarker([profile.lat,profile.lon],{radius:9,color:'#fff',weight:3,fillColor:'#2f6fe0',fillOpacity:1}).addTo(layer).bindTooltip('نقطه شروع شما');
+   L.circleMarker([profile.lat,profile.lon],{radius:9,color:'var(--media-surface)',weight:3,fillColor:'var(--map-marker)',fillOpacity:1}).addTo(layer).bindTooltip('نقطه شروع شما');
    bounds.push([profile.lat,profile.lon]);
-   if(profile.radius_km)L.circle([profile.lat,profile.lon],{radius:profile.radius_km*1000,color:'#2f6fe0',weight:1.5,fillOpacity:.06}).addTo(layer);
+   if(profile.radius_km)L.circle([profile.lat,profile.lon],{radius:profile.radius_km*1000,color:'var(--map-marker)',weight:1.5,fillOpacity:.06}).addTo(layer);
   }
   const view=stores.map(s=>s.shop_id).join()+'|'+profile.lat+'|'+profile.radius_km;
   if(bounds.length&&fitted.current!==view){m.fitBounds(bounds,{padding:[50,50],maxZoom:15,animate:false});fitted.current=view}
@@ -77,8 +77,8 @@ export default function MapPage({offers,profile,neighborhoods=[],planIds,onLocat
   <div className="map-stage">
    <div className="map-canvas" ref={box}/>
    {!stores.length?<div className="map-empty"><Store size={26}/><b>فروشگاهی برای نمایش نیست</b><p>یک محصول جست‌وجو کنید تا فروشگاه‌ها روی نقشه بیایند.</p></div>:null}
-   <div className="map-cards" ref={cards}>{stores.map((s,i)=><article key={s.shop_id} data-shop={s.shop_id} className={'map-card'+(active===s.shop_id?' active':'')} onClick={()=>focus(s)}>
-    <div className="map-card-head"><span className="pin-num">{num(i+1)}</span><b>{s.name}</b></div>
+   <div className="map-cards" ref={cards}>{stores.map((s,i)=><article key={s.shop_id} data-shop={s.shop_id} className={'map-card'+(active===s.shop_id?' active':'')}>
+    <button className="map-card-head" onClick={()=>focus(s)} aria-pressed={active===s.shop_id} aria-label={'انتخاب فروشگاه روی نقشه: '+s.name}><span className="pin-num">{num(i+1)}</span><b>{s.name}</b></button>
     <p className="map-card-addr">{s.area||s.address}{s.distance!=null?' · '+money(s.distance)+' کیلومتر':''}</p>
     <div className="map-card-meta"><span className={s.opening.state==='open'?'ok':''}><Clock size={12}/>{s.opening.label||'نامشخص'}</span>{s.credit?<span><Wallet size={12}/>اقساطی</span>:null}</div>
     <div className="map-card-price">{num(s.offers.length)} پیشنهاد · از <b>{money(price(s.best))}</b> تومان</div>
@@ -89,6 +89,6 @@ export default function MapPage({offers,profile,neighborhoods=[],planIds,onLocat
     </div>
    </article>)}</div>
   </div>
-  <p className="map-note">نقشه OpenStreetMap · مکان فروشگاه‌ها از دیتاست ترب · فاصله‌ها مستقیم است، نه مسیر جاده.</p>
+  <p className="map-note">فاصله‌ها به‌صورت مستقیم محاسبه شده‌اند.</p>
  </div>;
 }

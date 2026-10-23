@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit Frontend Experience"
+  short_description: "Review shopping craft, trust and usability"
+  default_prompt: "Use $audit-frontend-experience to complete the relevant Bazargard workflow and report concrete validation evidence."

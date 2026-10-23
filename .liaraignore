@@ -11,6 +11,8 @@
 .env*
 **/.env*
 data
+torob-dataset
+__MACOSX
 backups
 dist
 frontend/dist

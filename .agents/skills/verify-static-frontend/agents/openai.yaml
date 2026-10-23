@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Vite Frontend"
+  short_description: "Validate instructions, behavior and Vite build"
+  default_prompt: "Use $verify-static-frontend to complete the relevant Bazargard workflow and report concrete validation evidence."

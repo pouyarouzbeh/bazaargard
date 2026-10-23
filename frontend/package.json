@@ -1,1 +1,27 @@
-{"name":"hamrah-shopping-agent","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"vite --host 0.0.0.0","build":"vite build"},"dependencies":{"@fontsource/vazirmatn":"^5.3.0","leaflet":"^1.9.4","lucide-react":"^0.468.0","react":"^19.0.0","react-dom":"^19.0.0","react-markdown":"^10.0.0"},"devDependencies":{"vite":"^6.0.0"}}
+{
+  "name": "hamrah-shopping-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "test": "node --test",
+    "check:agent-docs": "node ../.agents/skills/verify-static-frontend/scripts/check-agent-docs.mjs",
+    "check:budgets": "node ../scripts/check-frontend-budget.mjs",
+    "check:theme": "node ../scripts/check-theme-contrast.mjs",
+    "check": "npm run check:agent-docs && npm run check:theme && npm test && npm run build && npm run check:budgets"
+  },
+  "dependencies": {
+    "@fontsource/vazirmatn": "^5.3.0",
+    "@radix-ui/react-dialog": "1.1.23",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.0.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
